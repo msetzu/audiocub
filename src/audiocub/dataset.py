@@ -6,10 +6,10 @@ import pathlib
 import pandas
 import numpy
 import datasets
-
+from tqdm import tqdm
 
 _CACHED = None
-_FOLDER_PATH = pathlib.Path(__file__).resolve().parent
+_FOLDER_PATH = pathlib.Path(__file__).resolve().parent.parent.parent
 _CUB_PATH = _FOLDER_PATH / "CUB_200_2011"
 
 
@@ -101,7 +101,7 @@ def _build_birdset(taxonomy: pandas.DataFrame) -> tuple[pandas.DataFrame, pandas
         "source",
     ]
     birdset_datasets = list()
-    for bird_database in DATABASES:
+    for bird_database in tqdm(DATABASES):
         train_df = datasets.load_dataset("DBD-research-group/BirdSet", bird_database, trust_remote_code=True, split="train")\
                     .cast_column("audio", datasets.Audio(sampling_rate=32_000))\
                     .to_pandas()\
@@ -121,7 +121,7 @@ def _build_birdset(taxonomy: pandas.DataFrame) -> tuple[pandas.DataFrame, pandas
         df["dataset"] = bird_database    
         
         # add all bird classifications
-        with open(f"data/{bird_database}_ebird_codes.json", "r") as log:
+        with open(_FOLDER_PATH / "data" / f"{bird_database}_ebird_codes.json", "r") as log:
             ebird_codes = pandas.DataFrame(json.load(log)["id2label"].items(), columns=["ebird_code", "species"]).astype({"ebird_code": int})
 
         df = pandas.merge(
